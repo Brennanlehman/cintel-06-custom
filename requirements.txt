@@ -43,3 +43,4 @@ shinylive
 shinywidgets
 shinyswatch
 pyshiny
+seaborn

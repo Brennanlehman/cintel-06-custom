@@ -15,6 +15,7 @@ import pandas as pd
 import plotly.express as px
 from shinywidgets import render_plotly
 from scipy import stats
+import seaborn as sns
 
 # --------------------------------------------
 
@@ -40,13 +41,12 @@ impaired_df = pd.read_csv("C:/Users/blehman/Projects/cintel-06-custom/dashboard/
 
 @reactive.calc()
 def reactive_calc_combined():
-    # Invalidate this calculation every UPDATE_INTERVAL_SECS to trigger updates
-    reactive.invalidate_later(UPDATE_INTERVAL_SECS)
+
 
     # Data generation logic
-    temp = round(random.uniform(0, 70), 1)
+    deaths = round(random.uniform(0, 8), 1)
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    new_dictionary_entry = {"temp":temp, "timestamp":timestamp}
+    new_dictionary_entry = {"deaths":deaths, "timestamp":timestamp}
 
     # get the deque and append the new entry
     reactive_value_wrapper.get().append(new_dictionary_entry)
@@ -89,19 +89,12 @@ with ui.sidebar(open="open"):
     ui.h2("Sidebar")
     ui.input_date_range("daterange", "Date range", start="2011-01-01", end="2014-12-31")
     
-    ui.input_selectize(  
-        "State",  
-        "Select a State Below:",  
-        {"1": "Alaska", "2": "Alabama", "3": "Arizona", "4": "Arkansas", "5": "California", "6": "Colorado", "7": "Connecticut", "8": "Delaware", 
-        "9": "District of Columbia", "10": "Florida", "11": "Georgia", "12": "Hawaii", "13": "Idaho", "14": "Illinois", "15": "Indiana", "16": "Iowa", 
-        "17": "Kansas", "18": "Kentucky", "19": "Louisiana", "20": "Maine", "21": "Maryland", "22": "Massachusetts", "23": "Michigan", "24": "Minnesota", 
-        "25": "Mississippi", "26": "Missouri", "27": "Montana", "28": "Nebraska", "29": "Nevada", "30": "New Hampshire", "31": "New Jersey", "32": "New Mexico", 
-        "33": "New York", "34": "North Carolina", "35": "North Dakota", "36": "Ohio", "37": "Oklahoma", "38": "Oregon", "39": "Pennsylvania", "40": "Rhode Island", 
-        "41": "South Carolina", "42": "South Dakota", "43": "Tennessee", "44": "Texas", "45": "United States", "46": "Utah", "47": "Vermont", "48": "Virginia", 
-        "49": "Washington", "50": "West Virginia", "51": "Wisconsin", "52": "Wyoming"}  
-    ) 
-  
-
+    ui.input_checkbox_group(  
+    "State",
+    "select state",  
+    ["Kentucky", "Alabama", "Ohio"],
+    inline=True,
+)
 
     ui.hr()
 
@@ -121,34 +114,27 @@ with ui.sidebar(open="open"):
 
 with ui.layout_columns():
     with ui.value_box(
-        theme="danger",
+        theme= """
+            bg-primary
+            text-light
+            border-primary""",
     ):
 
-        "Current Temperature"
+        "Impaired Driving Death Rates"
 
         @render.text
         def display_temp():
-            """Get the latest reading and return a temperature string"""
+            """Get the latest reading and return a death string"""
             deque_snapshot, df, latest_dictionary_entry = reactive_calc_combined()
-            return f"{latest_dictionary_entry['temp']} F"
+            return f"{latest_dictionary_entry['deaths']}"
 
-        ui.h1("SEVERE WEATHER ALERT!", style="font-weight:bold")
+      
 
-  
-
-    with ui.card(full_screen=True, style="background-color: lightgray;"):
-        ui.card_header("Current Date and Time")
-        
-        @render.text
-        def display_time():
-            """Get the latest reading and return a timestamp string"""
-            deque_snapshot, df, latest_dictionary_entry = reactive_calc_combined()
-            return f"{latest_dictionary_entry['timestamp']}" 
 
 
 #with ui.card(full_screen=True, min_height="100%"):
 with ui.card(full_screen=True, style="background-color: lightgray;", height=350):
-    ui.card_header("Most Recent Readings")
+    ui.card_header("Impaired Deaths Data Frame")
 
     @render.data_frame
     def display_df():
@@ -156,10 +142,15 @@ with ui.card(full_screen=True, style="background-color: lightgray;", height=350)
         deque_snapshot, df, latest_dictionary_entry = reactive_calc_combined()
         pd.set_option('display.width', None)        # Use maximum width
         return render.DataGrid(df, width="100%", height="100%")
-# Displaying Data Grid
-with ui.card(full_screen=True):  # Full screen option
-        ui.card_header("Impaired Driving Death Rate Data Grid")
-        @render.data_frame
-        def render_impaired_grid():
-            return impaired_df
 
+
+with ui.card(full_screen=True, style="background-color: lightgray;", height=350):
+        ui.card_header("State Seaborn historgram")
+
+        @render.plot(alt="A Seaborn histogram on Death Rates.")  
+        def plot():  
+            ax = sns.histplot(data=impaired_df, x="Female, 2012", y="State")  
+            ax.set_title("Female Death Rates, 2012")
+            ax.set_xlabel("Count")
+            ax.set_ylabel("null")
+            return ax 
