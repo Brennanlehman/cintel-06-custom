@@ -35,7 +35,7 @@ MAX_DEQUE_SIZE = 20
 # Very easy to expand or modify.
 # --------------------------------------------
 
-impaired_df = pd.read_csv("C:/Users/blehman/Projects/cintel-06-custom/dashboard/impaired.csv")
+impaired_df = pd.read_csv("impaired.csv")
 
 
 
